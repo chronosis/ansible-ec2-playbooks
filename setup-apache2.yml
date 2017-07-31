@@ -1,0 +1,28 @@
+---
+- name: update installed packages
+  become: true
+  yum:
+    name: "*"
+    state: latest
+- name: install yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: latest
+  with_items:
+    - { package: 'apache2', notes: 'Apache' }
+- name: install python AWS client
+  become: true
+  command: "pip install {{ item.package }}"
+  with_items:
+    - { package: 'awscli', notes: 'AWS CLI' }
+- name: enable mod_rewrite
+  become: true
+  apache2_module:
+    name: rewrite
+    state: present
+- name: restart apache2
+  become: true
+  service:
+    name: apache2
+    state: restarted
