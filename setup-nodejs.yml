@@ -1,0 +1,81 @@
+---
+- name: update installed packages
+  become: true
+  yum:
+    name: "*"
+    state: latest
+- name: install yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: latest
+  with_items:
+# Python updates cause python to break for some reason -- this is commented out for now until more debugging can be done
+#    - { package: 'python-pip', notes: 'Python package installer' }
+    - { package: 'ruby', notes: 'Ruby' }
+    - { package: 'ruby-devel', notes: 'Ruby Development' }
+    - { package: 'rubygems', notes: 'Ruby Gem packager' }
+    - { package: 'rubygems-devel', notes: 'Ruby Gem Development' }
+    - { package: 'gcc-c++', notes: 'C++ Compiler' }
+    - { package: 'libstdc++-devel', notes: 'Standard C++ Development libraries' }
+    - { package: 'wget', notes: 'wget binary' }
+#- name: update python-pip
+#  become: true
+#  pip:
+#    name: pip
+#    state: latest
+#  command: pip install --ignore-installed --upgrade pip
+- name: install python modules
+  become: true
+  command: "pip install {{ item.package }}"
+  with_items:
+    - { package: 'awscli', notes: 'AWS CLI' }
+- name: download codedeploy-agent
+  become: true
+  get_url:
+    url: https://aws-codedeploy-us-east-1.s3.amazonaws.com/latest/install
+    dest: ~/install-aws
+    mode: 0755
+- name: install codedeploy-agent
+  become: true
+  command: ~/install-aws auto
+- name: start codedeploy-agent service
+  become: true
+  service:
+    name: codedeploy-agent
+    state: started
+- name: download NVM
+  get_url:
+    url: https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh
+    dest: ~/install-nvm.sh
+    mode: 0755
+- name: install NVM
+  command: ~/install-nvm.sh
+- name: install nodejs
+  shell: /bin/bash -c "source ~/.nvm/nvm.sh && nvm install 8.2.1"
+- name: install Ruby packages (i.e. TravisCI CLI)
+  become: true
+  gem:
+    name: "{{ item.package }}"
+    state: latest
+    user_install: no
+  with_items:
+    - { package: 'travis', notes: 'TravisCI CLI utility'}
+- name: update npm
+  npm:
+    name: npm
+    global: yes
+    state: latest
+- name: update global npm modules
+  npm:
+    name: "{{ item.package }}"
+    global: yes
+    state: latest
+  with_items:
+    - { package: 'pm2', notes: 'Process Manager 2 (PM2)' }
+    - { package: 'gulp', notes: 'Gulp' }
+    - { package: 'gulp-cli', notes: 'Gulp CLI' }
+    - { package: 'mocha', notes: 'Mocha' }
+    - { package: 'nyc', notes: 'NYC-Instanbul' }
+- name: daemonize pm2
+  command: pm2 update

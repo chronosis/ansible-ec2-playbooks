@@ -1,0 +1,25 @@
+---
+- name: Stop aws ec2 server
+  become: false
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
+      private: no
+  tasks:
+    - name: Gather facts
+      ec2_remote_facts:
+        filters:
+          "tag:Name": "{{ hostName }}"
+      register: result
+    - name: Get server list
+      set_fact:
+        instances: "{{ result.instances }}"
+    - name: Stop server instance
+      ec2:
+        region: "{{ item.region }}"
+        instance_ids: "{{ item.id }}"
+        state: stopped
+      with_items:
+        - "{{ instances }}"

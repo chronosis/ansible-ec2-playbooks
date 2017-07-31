@@ -1,0 +1,33 @@
+---
+- name: Terminate aws ec2 server
+  become: false
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
+      private: no
+  tasks:
+    - name: Gather facts
+      ec2_remote_facts:
+        filters:
+          "tag:Name": "{{ hostName }}"
+      register: result
+    - name: Get server list
+      set_fact:
+        instances: "{{ result.instances }}"
+    - name: Retag instances
+      ec2_tag:
+        region: "{{ item.region }}"
+        resource: "{{ item.id }}"
+        tags:
+          Name: "TERMINATED-{{ item.tags.Name }}"
+      with_items:
+        - "{{ result.instances }}"
+    - name: Terminating server instance
+      ec2:
+        region: "{{ item.region }}"
+        instance_ids: "{{ item.id }}"
+        state: absent
+      with_items:
+        - "{{ instances }}"
