@@ -60,3 +60,4 @@
   gather_facts: false
   tasks:
     - include: setup-nodejs.yml
+    - include: setup-iptables.yml
