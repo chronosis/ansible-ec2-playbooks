@@ -1,0 +1,98 @@
+---
+- name: update installed packages
+  become: true
+  yum:
+    name: "*"
+    state: latest
+- name: install yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: latest
+  with_items:
+    - { package: 'gcc', notes: 'GNU C Compiler' }
+    - { package: 'tcl', notes: 'Tool Command Language' }
+    - { package: 'make', notes: 'MAKE tools' }
+- include: setup-awscli.yml
+- name: download and extract redis archive
+  become: true
+  unarchive:
+    src: http://download.redis.io/redis-stable.tar.gz
+    dest: ~/redis
+    remote_src: true
+- name: clean redis build
+  become: true
+  make:
+    chdir: ~/redis
+    target: distclean
+- name: build redis
+  become: true
+  make:
+    chdir: ~/redis
+- name: test redis build
+  become: true
+  make:
+    chdir: ~/redis
+    target: test
+- name: create require redis folders
+  become: true
+  file:
+    path: "{{ item.path }}"
+    state: directory
+  with_items:
+    - { path: '/etc/redis', notes: 'Redis Configuration /etc' }
+    - { path: '/var/lib/redis', notes: 'Redis Libraries' }
+    - { path: '/var/redis/6379', notes: 'Redis Working Folder' }
+- name: copy redis files
+  become: true
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: '~/redis/src/redis-server', dest: '/usr/local/bin/redis-server' }
+    - { src: '~/redis/src/redis-cli', dest: '/usr/local/bin/redis-cli' }
+    - { src: '~/redis/redis.conf', dest: '/etc/redis/6379.conf' }
+- name: reconfigure redis configuration
+  become: true
+  lineinfile:
+    dest: /etc/redis/6379.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: absent
+  with_items:
+    - { regexp: '^daemonize no', line: 'daemonize yes', notes: 'daemonize'}
+    - { regexp: '^logfile ""', line: 'logfile "/var/log/redis_6379.log"', notes: 'logfile'}
+    - { regexp: '^dir ./', line: 'dir /var/redis/6379', notes: 'working dir'}
+- name: download the redis-server init.d script
+  become: true
+  get_url:
+    url: https://raw.githubusercontent.com/saxenap/install-redis-amazon-linux-centos/master/redis-server
+    dest: /etc/init.d/redis-server
+    mode: 0755
+- name: reconfigure server startup script
+  become: true
+  lineinfile:
+    dest: /etc/init.d/redis-server
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: absent
+  with_items:
+    - { regexp: '^REDIS_CONF_FILE="/etc/redis/redis.conf"', line: 'REDIS_CONF_FILE="/etc/redis/6379.conf"', notes: 'redis conf'}
+- name: add redis-server to system start, set run levels and start
+  service:
+    name: redis-server
+    runlevel: 345
+    enabled: true
+    state: started
+- name: set sysctl for memory overcommit
+  become: true
+  lineinfile:
+    dest: /etc/sysctl.conf
+    line: 'vm.overcommit_memory = 1'
+    state: present
+- name: Wait for Redis
+  wait_for:
+    port: 6379
+    delay: 60
+    timeout: 320
+    state: started
