@@ -53,8 +53,12 @@
         state: started
       with_items:
         - "{{ result.instances }}"
+    - name: deploy SSH key for doc deploy
+      command: "ssh-copy-id -i doc_deploy_rsa.pub {{ item.private_dns_name }}"
+      with_items:
+        - "{{ result.instances }}"
 
-- name: Setup nodejs
+- name: Setup Apache2
   hosts: instances
   become: false
   gather_facts: false
