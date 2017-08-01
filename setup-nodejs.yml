@@ -25,11 +25,7 @@
 #    name: pip
 #    state: latest
 #  command: pip install --ignore-installed --upgrade pip
-- name: install python modules
-  become: true
-  command: "pip install {{ item.package }}"
-  with_items:
-    - { package: 'awscli', notes: 'AWS CLI' }
+- include: setup-awscli.yml
 - name: download codedeploy-agent
   become: true
   get_url:

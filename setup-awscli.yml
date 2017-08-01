@@ -1,0 +1,6 @@
+---
+- name: install python AWS client
+  become: true
+  command: "pip install {{ item.package }}"
+  with_items:
+    - { package: 'awscli', notes: 'AWS CLI' }

@@ -11,11 +11,7 @@
     state: latest
   with_items:
     - { package: 'apache2', notes: 'Apache' }
-- name: install python AWS client
-  become: true
-  command: "pip install {{ item.package }}"
-  with_items:
-    - { package: 'awscli', notes: 'AWS CLI' }
+- include: setup-awscli.yml
 - name: enable mod_rewrite
   become: true
   apache2_module:
