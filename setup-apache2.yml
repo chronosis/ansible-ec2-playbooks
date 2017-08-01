@@ -10,15 +10,34 @@
     name: "{{ item.package }}"
     state: latest
   with_items:
-    - { package: 'apache2', notes: 'Apache' }
+    - { package: 'httpd24', notes: 'Apache2' }
+    - { package: 'httpd24-manual', notes: 'Apache2 Manual' }
+    - { package: 'httpd24-tools', notes: 'Apache2 Tools' }
+    - { package: 'mod24_ssl', notes: 'Apache2 SSL/TLS Module' }
 - include: setup-awscli.yml
 - name: enable mod_rewrite
   become: true
   apache2_module:
     name: rewrite
     state: present
+- name: stage webroot folder
+  command: "{{ item.command }}"
+  with_items:
+    - { command: 'mkdir -p ~/webroot', notes: 'Make Webroot folder' }
+    - { command: 'chmod -R 0755 ~/webroot', notes: 'Set folder permissions' }
+    - { command: 'chmod -R 0755 ~', notes: 'Set home folder permissions' }
+- name: reconfigure apache to use webroot folder
+  become: true
+  lineinfile:
+    dest: /etc/httpd/conf/httpd.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: absent
+  with_items:
+    - { regexp: '^DocumentRoot "/var/www/html"', line: 'DocumentRoot "/home/ec2-user/webroot"', notes: 'Document Root Entry'}
+    - { regexp: '^<Directory "/var/www/html">', line: '<Directory "/home/ec2-user/webroot">', notes: 'Directory Entry'}
 - name: restart apache2
   become: true
   service:
-    name: apache2
+    name: httpd
     state: restarted
