@@ -16,7 +16,7 @@
           - website-api-sg
           - jay-testing-travisci
           - user-jreardon-sg
-        instance_type: t2.micro
+        instance_type: t2.small
         image: ami-93aef1e8
         vpc_subnet_id: subnet-533c2215
         region: us-east-1
@@ -60,3 +60,18 @@
   gather_facts: false
   tasks:
     - include: setup-redis.yml
+
+- name: Check Redis Status
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Wait for Redis
+      wait_for:
+        host: "{{ item.private_dns_name }}"
+        port: 6379
+        delay: 60
+        timeout: 320
+        state: started
+      with_items:
+        - "{{ result.instances }}"
