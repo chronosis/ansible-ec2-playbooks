@@ -1,0 +1,23 @@
+{
+  "name": "ansible-ec2-playbooks",
+  "version": "1.0.0",
+  "description": "A collection of ansible playbooks",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chronosis/ansible-ec2-playbooks.git"
+  },
+  "author": "Jay Reardon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chronosis/ansible-ec2-playbooks/issues"
+  },
+  "homepage": "https://github.com/chronosis/ansible-ec2-playbooks#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-rsync": "0.0.8"
+  }
+}
