@@ -40,22 +40,25 @@
     - { src: '/root/redis-stable/src/redis-server', dest: '/usr/local/bin/redis-server' }
     - { src: '/root/redis-stable/src/redis-cli', dest: '/usr/local/bin/redis-cli' }
     - { src: '/root/redis-stable/redis.conf', dest: '/etc/redis/6379.conf' }
+- name: ensure /etc/sysconfig/redis-server exists
+  become: true
+  file: path=/etc/sysconfig/redis-server state=touch owner=root mode=0555
 - name: reconfigure redis configuration
   become: true
   lineinfile:
     dest: /etc/redis/6379.conf
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
-    state: absent
+    state: present
   with_items:
     - { regexp: '^daemonize no', line: 'daemonize yes', notes: 'daemonize' }
     - { regexp: '^logfile ""', line: 'logfile "/var/log/redis_6379.log"', notes: 'logfile' }
     - { regexp: '^dir ./', line: 'dir /var/redis/6379', notes: 'working dir' }
     - { regexp: '~protected-mode yes', line: 'protected-mode no', notes: 'protected-mode' }
-- name: download the redis-server init.d script
+- name: copy the redis-server init.d script
   become: true
-  get_url:
-    url: https://raw.githubusercontent.com/saxenap/install-redis-amazon-linux-centos/master/redis-server
+  copy:
+    src: redis/redis-server
     dest: /etc/init.d/redis-server
     mode: 0755
 - name: reconfigure server startup script
@@ -64,7 +67,7 @@
     dest: /etc/init.d/redis-server
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
-    state: absent
+    state: present
   with_items:
     - { regexp: '^REDIS_CONF_FILE="/etc/redis/redis.conf"', line: 'REDIS_CONF_FILE="/etc/redis/6379.conf"', notes: 'redis conf'}
 - name: set sysctl for memory overcommit

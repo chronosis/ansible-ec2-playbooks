@@ -1,0 +1,86 @@
+#!/bin/sh
+#
+# redis-server      Startup script for redis-server daemon.
+#
+# chkconfig: 2345 85 15
+# description:  Redis is a persistent key-value database
+# processname: redis-server
+# config:      /etc/redis/redis.conf
+# config:      /etc/sysconfig/redis
+# pidfile:     /var/run/redis.pid
+
+### BEGIN INIT INFO
+# Provides: redis-server
+# Required-Start: $network $local_fs $remote_fs
+# Required-Stop: $network $local_fs $remote_fs
+# Short-Description: start and stop redis-server
+# Description: redis-server is the Redis Server daemon.
+### END INIT INFO
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+[ "$NETWORKING" = "no" ] && exit 0
+
+prog=redis-server
+exec=/usr/local/bin/$prog
+lockfile=/var/lock/subsys/$prog
+
+REDIS_CONF_FILE="/etc/redis/6379.conf"
+
+[ -f /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
+
+start() {
+    [ -x $exec ] || exit 5
+    [ -f $REDIS_CONF_FILE ] || exit 6
+
+    # Start daemon.
+    echo -n $"Starting $prog: "
+    daemon $exec $REDIS_CONF_FILE
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && touch $lockfile
+    return $retval
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog -QUIT
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $lockfile
+    return $retval
+}
+
+# See how we were called.
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $exec
+        ;;
+    restart|force-reload)
+        stop
+        start
+        ;;
+    reload)
+        exit 7
+        ;;
+    condrestart|try-restart)
+        if status $exec > /dev/null; then
+          stop
+          start
+        fi
+	      ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
+        exit 2
+esac
