@@ -23,3 +23,6 @@
     jump: REDIRECT
     to_ports: 8443
     comment: Redirect HTTPS web traffic to port 8443
+- name: save iptables
+  become: true
+  command: service iptables save
