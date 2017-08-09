@@ -14,7 +14,7 @@
         profile: production
         group:
           - website-api-sg
-          - jay-testing-travisci
+          - build-travisci-sg
           - user-jreardon-sg
         instance_type: t2.micro
         image: ami-93aef1e8
