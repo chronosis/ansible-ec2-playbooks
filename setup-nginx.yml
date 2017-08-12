@@ -1,0 +1,59 @@
+---
+- name: update installed packages
+  become: true
+  yum:
+    name: "*"
+    state: latest
+- name: install yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: latest
+  with_items:
+    - { package: 'nginx', notes: 'NGINX' }
+    - { package: 'nginx-all-modules', notes: 'NGINX Modules' }
+- include: setup-awscli.yml
+- name: create web root folder
+  become: true
+  file:
+    path: /var/www
+    state: directory
+- name: create nginx cache folders
+  become: true
+  file:
+    path: /var/nginx/cache
+    state: directory
+- name: create nginx base log folders
+  become: true
+  file:
+    path: /var/log/nginx
+    state: directory
+- name: remove default nginx site
+  become: true
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+- name: reconfigure nginx
+  become: true
+  lineinfile:
+    dest: /etc/nginx/nginx.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertafter: '^http \{'
+    state: "{{ item.state }}"
+  with_items:
+    - { regexp: '.*server_names_hash_bucket_size.*', line: '    server_names_hash_bucket_size 64;', state: 'absent', notes: 'remove existing lines' }
+    - { regexp: '# Setup Basic NGINX Caching', line: '# Setup Basic NGINX Caching', state: 'absent', notes: 'remove existing lines' }
+    - { regexp: '^proxy_cache_path.*', line: 'proxy_cache_path /var/nginx/cache levels=1:2 keys_zone=_placeholder_:10m max_size=10g inactive=60m use_temp_path=off;', state: 'absent', notes: 'remove existing lines'}
+    - { regexp: '#server_names_hash_bucket_size.*', line: '    server_names_hash_bucket_size 64;', state: 'present', notes: 'update server name bucket size' }
+    - { regexp: '^proxy_cache_path.*', line: 'proxy_cache_path /var/nginx/cache levels=1:2 keys_zone=sitesCache:10m max_size=10g inactive=60m use_temp_path=off;', state: 'present', notes: 'cache path'}
+    - { regexp: '# Setup Basic NGINX Caching', line: '# Setup Basic NGINX Caching', state: 'present', notes: 'comment'}
+- name: restart nginx
+  become: true
+  service:
+    name: nginx
+    enabled: true
+    state: restarted
+- name: create dhparams key (this will take a long time)
+  become: true
+  command: openssl dhparam -out /etc/ssl/dhparam.pem 4096

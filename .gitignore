@@ -1,4 +1,5 @@
 .DS_Store
 node_modules
-doc_deploy_rsa
+!*_rsa.pub
+*_rsa
 *.bak

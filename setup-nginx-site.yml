@@ -1,0 +1,61 @@
+---
+- name: set variables
+  set_fact:
+    nginx_conf: "/etc/nginx/conf.d/{{Domain}}.conf"
+    root_folder: "/var/www/{{Domain}}/html"
+    log_folder: "/var/log/nginx/{{Domain}}"
+    sslIncluded: "{{hasSSL}}"
+- name: copy the base configuration
+  become: true
+  copy:
+    src: nginx/base-configuration.conf
+    dest: "{{nginx_conf}}"
+    force: true
+    mode: 0755
+- name: create root folders for baseDomain
+  become: true
+  file:
+    path: "{{root_folder}}"
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: 0755
+- name: create log folders for baseDomain
+  become: true
+  file:
+    path: "{{log_folder}}"
+    state: directory
+# Add configuration changes here
+- name: change server_name configuration for new site
+  become: true
+  lineinfile:
+    dest: "{{nginx_conf}}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+    - { regexp: '^  server_name _placeholder_;', line: "  server_name {{Domain}}  {{Aliases}};", notes: 'Server Name'}
+- name: replace domain placeholder with site baseDomain
+  become: true
+  replace:
+    path: "{{nginx_conf}}"
+    regexp: '_placeholder_'
+    replace: "{{Domain}}"
+- name: enable SSL entries if SSL is enabled
+  become: true
+  replace:
+    path: "{{nginx_conf}}"
+    regexp: '^#####'
+    replace: ''
+  when: sslIncluded
+#- name: symlink configuration to enabled sites
+#  become: true
+#  file:
+#    src: '{{nginx_conf}}'
+#    dest: '/etc/nginx/sites-enabled/'
+#    state: link
+- name: restart nginx
+  become: true
+  service:
+    name: nginx
+    state: reloaded

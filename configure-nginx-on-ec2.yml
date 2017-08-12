@@ -1,0 +1,46 @@
+---
+- name: Discover instances(s)
+  become: false
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
+      private: no
+  tasks:
+    - name: Gather facts
+      ec2_remote_facts:
+        filters:
+          "tag:Name": "{{ hostName }}"
+          "tag:serverType": "nginx"
+      register: result
+    - name: Print server instances
+      debug:
+        var: result.instances
+    - name: Add instance to host group
+      add_host:
+        hostname: "{{ item.private_ip_address }}"
+        groupname: instances
+      with_items:
+        - "{{ result.instances }}"
+    - name: Copy SSH Key to server
+      copy:
+        src: site_deploy_rsa.pub
+        dest: ~/.ssh/site_deploy_rsa.pub
+        mode: 0600
+    - name: Deploy SSH key for site deploy
+      authorized_key:
+        key: "{{ lookup('file', '/home/ec2-user/.ssh/site_deploy_rsa.pub') }}"
+        user: ec2-user
+        state: present
+#    - name: deploy SSH key for site deploy
+#      command: "ssh-copy-id -i site_deploy_rsa.pub {{ item.private_dns_name }}"
+#      with_items:
+#        - "{{ result.instances }}"
+
+- name: Setup NGINX
+  hosts: instances
+  become: false
+  gather_facts: false
+  tasks:
+    - include: setup-nginx.yml

@@ -1,0 +1,78 @@
+---
+- name: Discover instances(s)
+  become: false
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
+      private: no
+    - name: "baseDomain"
+      prompt: "Enter the root site name"
+      private: no
+    - name: "siteAliases"
+      prompt: "Enter site domain aliases separated with spaces (e.g www.example.com www2.example.com)"
+      default: ""
+      private: no
+    - name: "certPubKey"
+      prompt: "Enter the local (.key) filename for the SSL Cert (if it has one)"
+      default: ""
+      private: no
+    - name: "certPemKey"
+      prompt: "Enter the local (.pem) filename for the SSL Cert (if it has one)"
+      default: ""
+      private: no
+  tasks:
+    - name: Gather facts
+      ec2_remote_facts:
+        filters:
+          "tag:Name": "{{ hostName }}"
+          "tag:serverType": "nginx"
+      register: result
+    - name: Print server instances
+      debug:
+        var: result.instances
+    - name: Add instance to host group
+      add_host:
+        hostname: "{{ item.private_ip_address }}"
+        groupname: instances
+      with_items:
+        - "{{ result.instances }}"
+    - name: set local variables
+      set_fact:
+        baseDomain: "{{baseDomain}}"
+        siteAliases: "{{siteAliases}}"
+    - name: set default value for sslIncluded
+      set_fact:
+        sslIncluded: false
+    - name: set value for sslIncluded if true
+      set_fact:
+        sslIncluded: true
+      when:
+        - certPubKey|default("") != ""
+        - certPemKey|default("") != ""
+    - name: copy cert pub key
+      become: true
+      copy:
+        src: "{{ certPubKey }}"
+        dest: "/etc/ssl/{{ baseDomain }}.key"
+        mode: 0644
+      when: sslIncluded
+    - name: copy cert
+      become: true
+      copy:
+        src: "{{ certPemKey }}"
+        dest: "/etc/ssl/{{ baseDomain }}.pem"
+        mode: 0644
+      when: sslIncluded
+
+- name: Setup NGINX Site
+  hosts: instances
+  become: false
+  gather_facts: false
+  vars:
+    hasSSL: "{{hostvars['localhost']['sslIncluded']}}"
+    Domain: "{{hostvars['localhost']['baseDomain']}}"
+    Aliases: "{{hostvars['localhost']['siteAliases']}}"
+  tasks:
+    - include: setup-nginx-site.yml
