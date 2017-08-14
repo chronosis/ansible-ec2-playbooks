@@ -24,6 +24,8 @@
   become: true
   file:
     path: "{{log_folder}}"
+    owner: nginx
+    group: nginx
     state: directory
 # Add configuration changes here
 - name: change server_name configuration for new site

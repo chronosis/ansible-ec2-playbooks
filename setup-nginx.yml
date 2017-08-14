@@ -17,16 +17,22 @@
   become: true
   file:
     path: /var/www
+    owner: nginx
+    group: nginx
     state: directory
 - name: create nginx cache folders
   become: true
   file:
     path: /var/nginx/cache
+    owner: nginx
+    group: nginx
     state: directory
 - name: create nginx base log folders
   become: true
   file:
     path: /var/log/nginx
+    owner: nginx
+    group: nginx
     state: directory
 - name: remove default nginx site
   become: true
@@ -46,14 +52,14 @@
     - { regexp: '# Setup Basic NGINX Caching', line: '# Setup Basic NGINX Caching', state: 'absent', notes: 'remove existing lines' }
     - { regexp: '^proxy_cache_path.*', line: 'proxy_cache_path /var/nginx/cache levels=1:2 keys_zone=_placeholder_:10m max_size=10g inactive=60m use_temp_path=off;', state: 'absent', notes: 'remove existing lines'}
     - { regexp: '#server_names_hash_bucket_size.*', line: '    server_names_hash_bucket_size 64;', state: 'present', notes: 'update server name bucket size' }
-    - { regexp: '^proxy_cache_path.*', line: 'proxy_cache_path /var/nginx/cache levels=1:2 keys_zone=sitesCache:10m max_size=10g inactive=60m use_temp_path=off;', state: 'present', notes: 'cache path'}
-    - { regexp: '# Setup Basic NGINX Caching', line: '# Setup Basic NGINX Caching', state: 'present', notes: 'comment'}
+    - { regexp: '^proxy_cache_path.*', line: '    proxy_cache_path /var/nginx/cache levels=1:2 keys_zone=sitesCache:10m max_size=10g inactive=60m use_temp_path=off;', state: 'present', notes: 'cache path'}
+    - { regexp: '# Setup Basic NGINX Caching', line: '    # Setup Basic NGINX Caching', state: 'present', notes: 'comment'}
 - name: restart nginx
   become: true
   service:
     name: nginx
     enabled: true
     state: restarted
-- name: create dhparams key (this will take a long time)
+- name: create dhparams 4096-bit key (this will take a very long time ~10m)
   become: true
   command: openssl dhparam -out /etc/ssl/dhparam.pem 4096
