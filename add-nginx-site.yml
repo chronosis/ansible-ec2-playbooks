@@ -14,12 +14,16 @@
       prompt: "Enter site domain aliases separated with spaces (e.g www.example.com www2.example.com)"
       default: ""
       private: no
-    - name: "certPubKey"
+    - name: "certPrvKey"
       prompt: "Enter the local (.key) filename for the SSL Cert (if it has one)"
       default: ""
       private: no
     - name: "certPemKey"
-      prompt: "Enter the local (.pem) filename for the SSL Cert (if it has one)"
+      prompt: "Enter the local (.pem/.crt) filename for the SSL Cert (if it has one)"
+      default: ""
+      private: no
+    - name: "certCABundle"
+      prompt: "Enter the local (.ca-bundle) filename for the SSL Cert (if it has one)"
       default: ""
       private: no
   tasks:
@@ -49,12 +53,17 @@
       set_fact:
         sslIncluded: true
       when:
-        - certPubKey|default("") != ""
+        - certPrvKey|default("") != ""
         - certPemKey|default("") != ""
-    - name: copy cert pub key
+    - name: set value for caBundleIncluded if true
+      set_fact:
+        caBundleIncluded: true
+      when:
+        - certCABundle|default("") != ""
+    - name: copy cert private key
       become: true
       copy:
-        src: "{{ certPubKey }}"
+        src: "{{ certPrvKey }}"
         dest: "/etc/ssl/{{ baseDomain }}.key"
         mode: 0644
       when: sslIncluded
@@ -62,6 +71,20 @@
       become: true
       copy:
         src: "{{ certPemKey }}"
+        dest: "/etc/ssl/{{baseDomain}}/{{ baseDomain }}.pem"
+        mode: 0644
+      when: sslIncluded
+    - name: copy cert
+      become: true
+      copy:
+        src: "{{ certPemKey }}"
+        dest: "/etc/ssl/{{ baseDomain }}/{{ baseDomain }}.ca-bundle"
+        mode: 0644
+      when: certCABundle
+    - name: merge bundle and cert
+      become: true
+      assemble:
+        src: "/etc/ssl/{{ baseDomain }}"
         dest: "/etc/ssl/{{ baseDomain }}.pem"
         mode: 0644
       when: sslIncluded
