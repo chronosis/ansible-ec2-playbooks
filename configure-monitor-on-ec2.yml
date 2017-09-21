@@ -1,0 +1,48 @@
+---
+- name: Discover instances(s)
+  become: false
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
+      private: no
+    - name: "influxUser"
+      prompt: "Enter the influx admin user name"
+      private: no
+    - name: "influxPass"
+      prompt: "Enter the influx admin password"
+      private: no
+    - name: "telegraf"
+      prompt: "Enter the telegraf password"
+      private: no
+    - name: "grafana"
+      prompt: "Enter the grafana password"
+      private: no
+  tasks:
+    - name: Gather facts
+      ec2_remote_facts:
+        filters:
+          "tag:Name": "{{ hostName }}"
+      register: result
+    - name: Print server instances
+      debug:
+        var: result.instances
+    - name: Add instance to host group
+      add_host:
+        hostname: "{{ item.private_ip_address }}"
+        groupname: instances
+      with_items:
+        - "{{ result.instances }}"
+
+- name: Setup monitor
+  hosts: instances
+  become: false
+  gather_facts: false
+  vars:
+    AdminUser: "{{hostvars['localhost']['influxUser']}}"
+    AdminPass: "{{hostvars['localhost']['influxPass']}}"
+    TelegrafUserPass: "{{hostvars['localhost']['telegraf']}}"
+    GrafanaUserPass: "{{hostvars['localhost']['grafana']}}"
+  tasks:
+    - include: setup-monitor.yml

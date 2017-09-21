@@ -1,11 +1,23 @@
 ---
-- name: Create aws ec2 nodejs server
+- name: Create aws ec2 monitor server
   hosts: localhost
   become: false
   gather_facts: false
   vars_prompt:
     - name: "instanceName"
       prompt: "Enter the name for the instance"
+      private: no
+    - name: "influxUser"
+      prompt: "Enter the influx admin user name"
+      private: no
+    - name: "influxPass"
+      prompt: "Enter the influx admin password"
+      private: no
+    - name: "telegrafPass"
+      prompt: "Enter the telegraf password"
+      private: no
+    - name: "grafanaPass"
+      prompt: "Enter the grafana password"
       private: no
   tasks:
     - name: Create ec2 instance
@@ -16,7 +28,7 @@
           - website-api-sg
           - build-travisci-sg
           - user-jreardon-sg
-        instance_type: t2.micro
+        instance_type: t2.small
         image: ami-04f6fc7f
         vpc_subnet_id: subnet-533c2215
         region: us-east-1
@@ -53,3 +65,15 @@
         state: started
       with_items:
         - "{{ result.instances }}"
+
+- name: Setup Monitoring Software
+  hosts: instances
+  become: false
+  gather_facts: false
+  vars:
+    AdminUser: "{{hostvars['localhost']['influxUser']}}"
+    AdminPass: "{{hostvars['localhost']['influxPass']}}"
+    TelegrafUserPass: "{{hostvars['localhost']['telegrafPass']}}"
+    GrafanaUserPass: "{{hostvars['localhost']['grafanaPass']}}"
+  tasks:
+    - include: setup-monitor.yml

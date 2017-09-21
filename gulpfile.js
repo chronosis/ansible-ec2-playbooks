@@ -8,7 +8,7 @@ gulp.task('default', () => {
 });
 
 gulp.task('rsync', () => {
-  return gulp.src(['*.yml', '*.pub', './redis/*', './nginx/*'])
+  return gulp.src(['*.yml', '*.pub', './redis/*', './nginx/*', './ssl/*', './influxdb/*'])
     .pipe(rsync({
       root: './',
       hostname: 'ansible',

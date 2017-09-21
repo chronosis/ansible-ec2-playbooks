@@ -1,13 +1,36 @@
 ---
-- name: Create aws ec2 nodejs server
-  hosts: localhost
+- name: Terminate aws ec2 server
   become: false
   gather_facts: false
+  hosts: localhost
   vars_prompt:
-    - name: "instanceName"
-      prompt: "Enter the name for the instance"
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
       private: no
   tasks:
+    - name: Gather facts
+      ec2_remote_facts:
+        filters:
+          "tag:Name": "{{ hostName }}"
+      register: result
+    - name: Get server list
+      set_fact:
+        instances: "{{ result.instances }}"
+    - name: Retag instances
+      ec2_tag:
+        region: "{{ item.region }}"
+        resource: "{{ item.id }}"
+        tags:
+          Name: "TERMINATED-{{ item.tags.Name }}"
+      with_items:
+        - "{{ result.instances }}"
+    - name: Terminating server instance
+      ec2:
+        region: "{{ item.region }}"
+        instance_ids: "{{ item.id }}"
+        state: absent
+      with_items:
+        - "{{ instances }}"
     - name: Create ec2 instance
       ec2:
         key_name: default-website
@@ -23,7 +46,7 @@
         assign_public_ip: yes
         instance_profile_name: codedeploy-role
         instance_tags:
-          Name: "{{ instanceName }}"
+          Name: "{{ hostName }}"
         wait: true
         count: 1
       register: result
@@ -32,7 +55,7 @@
         region: "{{ item.region }}"
         resource: "{{ item.id }}"
         tags:
-          Name: "{{ instanceName }}"
+          Name: "{{ hostName }}"
       with_items:
         - "{{ result.instances }}"
     - name: Debug output of results
