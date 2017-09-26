@@ -102,12 +102,18 @@
   become: true
   service:
     name: grafana-server
+    runlevel: 345
+    state: enabled
+- name: start grafana server
+  become: true
+  service:
+    name: grafana-server
     state: started
 - name: check that telegraf is running
   become: true
   wait_for:
     host: localhost
-    port: 300
+    port: 3000
     delay: 5
     timeout: 320
     state: started
