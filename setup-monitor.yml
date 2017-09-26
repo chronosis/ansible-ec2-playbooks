@@ -61,7 +61,7 @@
     delay: 5
     timeout: 320
     state: started
-- name: updated telegraf configuration (1/2)
+- name: updated telegraf configuration (1/3)
   become: true
   lineinfile:
     dest: /etc/telegraf/telegraf.conf
@@ -70,7 +70,7 @@
     state: present
   with_items:
     - { regexp: '^#? ?\[\[inputs.statsd\]\]', line: '[[inputs.statsd]]', notes: 'Statsd Block' }
-- name: updated telegraf configuration (2/2)
+- name: updated telegraf configuration (2/3)
   become: true
   lineinfile:
     dest: /etc/telegraf/telegraf.conf
@@ -81,6 +81,18 @@
   with_items:
     - { regexp: '^#? ? ? ?protocol = "udp"', line: '  protocol = "udp"', notes: 'Protocol (UDP) Setting' }
     - { regexp: '^#? ? ? ?service_address = ":8125"', line: '  service_address = ":8125"', notes: 'Service Address' }
+- name: updated telegraf configuration (2/3)
+  become: true
+  lineinfile:
+    dest: /etc/telegraf/telegraf.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertafter: '^.*\[\[outputs.influxdb\]\]'
+    state: present
+  with_items:
+    - { regexp: '^ ? ?database = "telegraf"', line: '  database = "telegraf_database"', notes: 'Database Setting' }
+    - { regexp: '^ ? ?#? ?username = "telegraf"', line: '  username = "telegraf"', notes: 'Username' }
+    - { regexp: '^ ? ?#? ?password = ".*"', line: '  password = "{{telegraf}}"', notes: 'Password' }
 - name: start telegraf service
   become: true
   service:
