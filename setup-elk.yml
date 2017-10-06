@@ -1,0 +1,104 @@
+---
+- name: update installed packages
+  become: true
+  yum:
+    name: "*"
+    state: latest
+- name: remove old yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: absent
+  with_items:
+    - { package: 'kibana', notes: 'Kibana' }
+    - { package: 'logstash', notes: 'Logstash' }
+    - { package: 'elasticsearch', notes: 'ElasticSearch' }
+    - { package: 'java-1.7.0-openjdk', notes: 'OpenJDK' }
+- name: install yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: latest
+  with_items:
+    - { package: 'java-1.8.0-openjdk', notes: 'OpenJDK' }
+    - { package: 'https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.2.rpm', notes: 'ElasticSearch' }
+    - { package: 'https://artifacts.elastic.co/downloads/logstash/logstash-5.6.2.rpm', notes: 'Logstash' }
+    - { package: 'https://artifacts.elastic.co/downloads/kibana/kibana-5.6.2-x86_64.rpm', notes: 'Kibana' }
+- include: setup-awscli.yml
+- name: set sysctl for memory overcommit
+  become: true
+  lineinfile:
+    dest: /etc/sysctl.conf
+    regexp: ^vm.overcommit_memory
+    line: vm.overcommit_memory = 1
+    state: present
+- name: enable elasticsearch
+  become: true
+  service:
+    name: elasticsearch
+    runlevel: 345
+    enabled: true
+- name: set elasticsearch heap size
+  become: true
+  lineinfile:
+    dest: /etc/init.d/elasticsearch
+    regexp: "{{ item.regexp }}"
+    insertafter: "{{ item.after }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+    - { regexp: '^ES_JAVA_OPTS', line: 'ES_JAVA_OPTS="-Xms1g -Xmx1g"', after: '^ES_HOME=', notes: 'Java Options' }
+- name: start elasticsearch
+  become: true
+  service:
+    name: elasticsearch
+    state: started
+- name: check that elasticsearch is running
+  become: true
+  wait_for:
+    host: localhost
+    port: 9200
+    delay: 1
+    timeout: 150
+    state: started
+- name: enable logstash
+  become: true
+  service:
+    name: logstash
+    runlevel: 345
+    enabled: true
+- name: start logstash
+  become: true
+  service:
+    name: logstash
+    state: started
+- name: setup logstash configuration
+  become: true
+  copy:
+    src: "./elk/10-syslog.conf"
+    dest: "/etc/logstash/conf.d/10-syslog.conf"
+    mode: 0644
+- name: restart logstash
+  become: true
+  service:
+    name: logstash
+    state: restarted
+- name: enable kibana
+  become: true
+  service:
+    name: kibana
+    runlevel: 345
+    enabled: true
+- name: start kibana
+  become: true
+  service:
+    name: kibana
+    state: started
+- name: check that kibana is running
+  become: true
+  wait_for:
+    host: localhost
+    port: 5601
+    delay: 1
+    timeout: 150
+    state: started

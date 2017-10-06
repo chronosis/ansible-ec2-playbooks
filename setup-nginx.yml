@@ -4,6 +4,14 @@
   yum:
     name: "*"
     state: latest
+- name: remove old yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: absent
+  with_items:
+    - { package: 'nginx-all-modules', notes: 'NGINX Modules' }
+    - { package: 'nginx', notes: 'NGINX' }
 - name: install yum packages
   become: true
   yum:

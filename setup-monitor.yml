@@ -103,7 +103,7 @@
   service:
     name: grafana-server
     runlevel: 345
-    state: enabled
+    enabled: true
 - name: start grafana server
   become: true
   service:

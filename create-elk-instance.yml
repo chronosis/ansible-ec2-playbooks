@@ -1,0 +1,135 @@
+---
+- name: Create aws ec2 ElasticSearch/Kibana server
+  hosts: localhost
+  become: false
+  gather_facts: false
+  vars_prompt:
+    - name: "instanceName"
+      prompt: "Enter the name for the instance"
+      private: no
+    - name: "baseDomain"
+      prompt: "Enter the root site name"
+      private: no
+    - name: "siteAliases"
+      prompt: "Enter site domain aliases separated with spaces (e.g www.example.com www2.example.com)"
+      default: ""
+      private: no
+    - name: "certPrvKey"
+      prompt: "Enter the local (.key) filename for the SSL Cert (if it has one)"
+      default: ""
+      private: no
+    - name: "certPemKey"
+      prompt: "Enter the local (.pem/.crt) filename for the SSL Cert (if it has one)"
+      default: ""
+      private: no
+    - name: "certCABundle"
+      prompt: "Enter the local (.ca-bundle) filename for the SSL Cert (if it has one)"
+      default: ""
+      private: no
+  tasks:
+    - name: set local variables
+      set_fact:
+        baseDomain: "{{baseDomain}}"
+        siteAliases: "{{siteAliases}}"
+    - name: set default value for sslIncluded
+      set_fact:
+        sslIncluded: false
+    - name: set value for sslIncluded if true
+      set_fact:
+        sslIncluded: true
+      when:
+        - certPrvKey|default("") != ""
+        - certPemKey|default("") != ""
+    - name: Create ec2 instance
+      ec2:
+        key_name: default-website
+        profile: production
+        group:
+          - website-api-sg
+          - build-travisci-sg
+          - user-jreardon-sg
+        instance_type: t2.small
+        image: ami-04f6fc7f
+        vpc_subnet_id: subnet-533c2215
+        region: us-east-1
+        assign_public_ip: yes
+        instance_profile_name: codedeploy-role
+        instance_tags:
+          Name: "{{ instanceName }}"
+          serverType: "elasticsearch"
+        wait: true
+        count: 1
+      register: result
+    - name: Add Name tag to the new instance(s)
+      ec2_tag:
+        region: "{{ item.region }}"
+        resource: "{{ item.id }}"
+        tags:
+          Name: "{{ instanceName }}"
+          serverType: "elasticsearch"
+      with_items:
+        - "{{ result.instances }}"
+    - name: Debug output of results
+      debug:
+        var: result.instances
+    - name: Add instance to host group
+      add_host:
+        hostname: "{{ item.private_ip }}"
+        groupname: instances
+      with_items:
+        - "{{ result.instances }}"
+    - name: Wait for SSH
+      wait_for:
+        host: "{{ item.private_dns_name }}"
+        port: 22
+        delay: 60
+        timeout: 320
+        state: started
+      with_items:
+        - "{{ result.instances }}"
+    - name: set value for caBundleIncluded if true
+      set_fact:
+        caBundleIncluded: true
+      when:
+        - certCABundle|default("") != ""
+    - name: copy cert private key
+      become: true
+      copy:
+        src: "{{ certPrvKey }}"
+        dest: "/etc/ssl/{{ baseDomain }}.key"
+        mode: 0644
+      when: sslIncluded
+    - name: copy cert
+      become: true
+      copy:
+        src: "{{ certPemKey }}"
+        dest: "/etc/ssl/{{baseDomain}}/{{ baseDomain }}.pem"
+        mode: 0644
+      when: sslIncluded
+    - name: copy cert
+      become: true
+      copy:
+        src: "{{ certPemKey }}"
+        dest: "/etc/ssl/{{ baseDomain }}/{{ baseDomain }}.ca-bundle"
+        mode: 0644
+      when: certCABundle
+    - name: merge bundle and cert
+      become: true
+      assemble:
+        src: "/etc/ssl/{{ baseDomain }}"
+        dest: "/etc/ssl/{{ baseDomain }}.pem"
+        mode: 0644
+      when: sslIncluded
+
+- name: Setup ELK
+  hosts: instances
+  become: false
+  gather_facts: false
+  vars:
+    hasSSL: "{{hostvars['localhost']['sslIncluded']}}"
+    Domain: "{{hostvars['localhost']['baseDomain']}}"
+    Aliases: "{{hostvars['localhost']['siteAliases']}}"
+  tasks:
+    - include: setup-nginx.yml
+    - include: setup-elk.yml
+    - include: setup-nginx-kibana.yml
