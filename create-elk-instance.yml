@@ -49,7 +49,7 @@
           - build-travisci-sg
           - user-jreardon-sg
         instance_type: t2.small
-        image: ami-04f6fc7f
+        image: ami-258d445f
         vpc_subnet_id: subnet-533c2215
         region: us-east-1
         assign_public_ip: yes
@@ -92,40 +92,16 @@
         caBundleIncluded: true
       when:
         - certCABundle|default("") != ""
-    - name: copy cert private key
-      become: true
-      copy:
-        src: "{{ certPrvKey }}"
-        dest: "/etc/ssl/{{ baseDomain }}.key"
-        mode: 0644
-      when: sslIncluded
-    - name: copy cert
-      become: true
-      copy:
-        src: "{{ certPemKey }}"
-        dest: "/etc/ssl/{{baseDomain}}/{{ baseDomain }}.pem"
-        mode: 0644
-      when: sslIncluded
-    - name: copy cert
-      become: true
-      copy:
-        src: "{{ certPemKey }}"
-        dest: "/etc/ssl/{{ baseDomain }}/{{ baseDomain }}.ca-bundle"
-        mode: 0644
-      when: certCABundle
-    - name: merge bundle and cert
-      become: true
-      assemble:
-        src: "/etc/ssl/{{ baseDomain }}"
-        dest: "/etc/ssl/{{ baseDomain }}.pem"
-        mode: 0644
-      when: sslIncluded
 
 - name: Setup ELK
   hosts: instances
   become: false
   gather_facts: false
   vars:
+    certPrvKey: "{{hostvars['localhost']['certPrvKey']}}"
+    certPemKey: "{{hostvars['localhost']['certPemKey']}}"
+    certCABundle: "{{hostvars['localhost']['certCABundle']}}"
+    caBundleIncluded: "{{hostvars['localhost']['caBundleIncluded']}}"
     hasSSL: "{{hostvars['localhost']['sslIncluded']}}"
     Domain: "{{hostvars['localhost']['baseDomain']}}"
     Aliases: "{{hostvars['localhost']['siteAliases']}}"

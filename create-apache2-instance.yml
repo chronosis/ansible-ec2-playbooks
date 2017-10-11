@@ -17,7 +17,7 @@
           - build-travisci-sg
           - user-jreardon-sg
         instance_type: t2.micro
-        image: ami-04f6fc7f
+        image: ami-258d445f
         vpc_subnet_id: subnet-533c2215
         region: us-east-1
         assign_public_ip: yes

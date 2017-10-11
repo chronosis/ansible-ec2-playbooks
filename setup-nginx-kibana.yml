@@ -50,6 +50,34 @@
     regexp: '^#####'
     replace: ''
   when: sslIncluded
+- name: copy cert private key
+  become: true
+  copy:
+    src: "{{ certPrvKey }}"
+    dest: "/etc/ssl/{{ baseDomain }}.key"
+    mode: 0644
+  when: sslIncluded
+- name: copy cert
+  become: true
+  copy:
+    src: "{{ certPemKey }}"
+    dest: "/etc/ssl/{{baseDomain}}/{{ baseDomain }}.pem"
+    mode: 0644
+  when: sslIncluded
+- name: copy cert
+  become: true
+  copy:
+    src: "{{ certPemKey }}"
+    dest: "/etc/ssl/{{ baseDomain }}/{{ baseDomain }}.ca-bundle"
+    mode: 0644
+  when: certCABundle
+- name: merge bundle and cert
+  become: true
+  assemble:
+    src: "/etc/ssl/{{ baseDomain }}"
+    dest: "/etc/ssl/{{ baseDomain }}.pem"
+    mode: 0644
+  when: sslIncluded      
 #- name: symlink configuration to enabled sites
 #  become: true
 #  file:
