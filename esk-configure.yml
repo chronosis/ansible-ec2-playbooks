@@ -35,11 +35,14 @@
         tags:
           serverType: "elasticsearch"
       with_items:
-        - "{{ result.instances }}"    
+        - "{{ result.instances }}"
     - name: set local variables
       set_fact:
         baseDomain: "{{baseDomain}}"
         siteAliases: "{{siteAliases}}"
+        certPrvKey: "{{certPrvKey}}"
+        certPemKey: "{{certPemKey}}"
+        certCABundle: "{{certCABundle}}"
     - name: set default value for sslIncluded
       set_fact:
         sslIncluded: false
@@ -49,6 +52,9 @@
       when:
         - certPrvKey|default("") != ""
         - certPemKey|default("") != ""
+    - name: set default value for caBundleIncluded
+      set_fact:
+        caBundleIncluded: false        
     - name: set value for caBundleIncluded if true
       set_fact:
         caBundleIncluded: true

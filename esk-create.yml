@@ -42,6 +42,9 @@
       set_fact:
         baseDomain: "{{baseDomain}}"
         siteAliases: "{{siteAliases}}"
+        certPrvKey: "{{certPrvKey}}"
+        certPemKey: "{{certPemKey}}"
+        certCABundle: "{{certCABundle}}"
     - name: set default value for sslIncluded
       set_fact:
         sslIncluded: false
@@ -51,6 +54,9 @@
       when:
         - certPrvKey|default("") != ""
         - certPemKey|default("") != ""
+    - name: set default value for caBundleIncluded
+      set_fact:
+        caBundleIncluded: false
     - name: set value for caBundleIncluded if true
       set_fact:
         caBundleIncluded: true

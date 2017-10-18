@@ -54,12 +54,12 @@
 - name: setup logstash configuration
   become: true
   copy:
-    src: "{{ item.file }}"
+    src: "elk/{{ item.file }}"
     dest: "/etc/logstash/conf.d/{{ item.file }}"
     mode: 0644
   with_items:
-    - { file: "./elk/10-syslog.conf", notes: 'SysConf configuration' }
-    - { file: "./elk/20-udp-json.conf", notes: 'UDP JSON configuration' }
+    - { file: "10-syslog.conf", notes: 'SysConf configuration' }
+    - { file: "20-udp-json.conf", notes: 'UDP JSON configuration' }
 - name: restart logstash
   become: true
   service:

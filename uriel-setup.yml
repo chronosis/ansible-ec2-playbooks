@@ -1,0 +1,52 @@
+---
+- name: update installed packages
+  become: true
+  yum:
+    name: "*"
+    state: latest
+- name: install yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: latest
+  with_items:
+    - { package: 'git', notes: 'Git' }
+- name: update npm
+  npm:
+    global: true
+    name: npm
+    state: latest
+- name: install pm2
+  npm:
+    global: true
+    name: pm2
+    state: latest
+- name: start pm2 daemon
+  command: pm2 update
+- name: remove Uriel from pm2 if it exists
+  command: pm2 delete "Uriel" -s
+  ignore_errors: true
+- name: clone uriel repo
+  git:
+    clone: true
+    repo: https://github.com/chronosis/uriel.git
+    dest: ~/uriel
+    force: yes
+- name: npm install
+  npm:
+    path: ~/uriel
+    state: latest
+- name: copy uriel configuration
+  copy:
+    src: uriel/uriel-config.js
+    dest: "~/uriel/uriel-config.js"
+    force: true
+    mode: 0755
+- name: replace configuration to use servername
+  replace:
+    path: "~/uriel/uriel-config.js"
+    regexp: '_placeholder_'
+    replace: "{{ServerName}}"
+  when: ServerName|default("") != ""
+- name: start uriel
+  command: pm2 start ~/uriel/app.js -n "Uriel" -i 1 -- -c ~/uriel/uriel-config.js

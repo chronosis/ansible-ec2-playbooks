@@ -1,0 +1,25 @@
+---
+- name: Discover instances(s)
+  become: false
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
+      private: no
+    - name: "serverName"
+      prompt: "Enter the server name for reporting"
+      private: no
+  tasks:
+    - include: ec2-instance-discover.yml
+    - set_fact:
+        serverName: "{{serverName}}"
+
+- name: Setup Uriel
+  hosts: instances
+  become: false
+  gather_facts: false
+  vars:
+    ServerName: "{{hostvars['localhost']['serverName']}}"
+  tasks:
+    - include: uriel-setup.yml

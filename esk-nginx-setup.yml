@@ -5,6 +5,7 @@
     root_folder: "/var/www/{{Domain}}/html"
     log_folder: "/var/log/nginx/{{Domain}}"
     sslIncluded: "{{hasSSL}}"
+    bundleIncluded: "{{caBundleIncluded}}"
 - name: copy the base configuration
   become: true
   copy:
@@ -50,34 +51,39 @@
     regexp: '^#####'
     replace: ''
   when: sslIncluded
+- name: create ssl folder
+  become: true
+  file:
+    path: "/etc/ssl/{{ Domain }}"
+    state: directory
 - name: copy cert private key
   become: true
   copy:
     src: "{{ certPrvKey }}"
-    dest: "/etc/ssl/{{ baseDomain }}.key"
+    dest: "/etc/ssl/{{ Domain }}.key"
     mode: 0644
   when: sslIncluded
 - name: copy cert
   become: true
   copy:
     src: "{{ certPemKey }}"
-    dest: "/etc/ssl/{{baseDomain}}/{{ baseDomain }}.pem"
+    dest: "/etc/ssl/{{ Domain }}/{{ Domain }}.pem"
     mode: 0644
   when: sslIncluded
 - name: copy cert
   become: true
   copy:
     src: "{{ certPemKey }}"
-    dest: "/etc/ssl/{{ baseDomain }}/{{ baseDomain }}.ca-bundle"
+    dest: "/etc/ssl/{{ Domain }}/{{ Domain }}.ca-bundle"
     mode: 0644
-  when: certCABundle
+  when: bundleIncluded
 - name: merge bundle and cert
   become: true
   assemble:
-    src: "/etc/ssl/{{ baseDomain }}"
-    dest: "/etc/ssl/{{ baseDomain }}.pem"
+    src: "/etc/ssl/{{ Domain }}"
+    dest: "/etc/ssl/{{ Domain }}.pem"
     mode: 0644
-  when: sslIncluded      
+  when: sslIncluded
 #- name: symlink configuration to enabled sites
 #  become: true
 #  file:
