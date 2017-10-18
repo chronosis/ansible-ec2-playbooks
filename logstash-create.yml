@@ -1,0 +1,28 @@
+---
+- name: Create aws ec2 ElasticSearch/Kibana server
+  hosts: localhost
+  become: false
+  gather_facts: false
+  vars_prompt:
+    - name: "instanceName"
+      prompt: "Enter the name for the instance"
+      private: no
+  vars:
+    ec2size: t2.small
+  tasks:
+    - include: ec2-instance-create.yml
+    - name: Add serverType tag to the new instance(s)
+      ec2_tag:
+        region: "{{ item.region }}"
+        resource: "{{ item.id }}"
+        tags:
+          serverType: "logstash"
+      with_items:
+        - "{{ result.instances }}"
+
+- name: Setup Logstash
+  hosts: instances
+  become: false
+  gather_facts: false
+  tasks:
+    - include: logstash-setup.yml

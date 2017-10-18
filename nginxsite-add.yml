@@ -27,21 +27,7 @@
       default: ""
       private: no
   tasks:
-    - name: Gather facts
-      ec2_remote_facts:
-        filters:
-          "tag:Name": "{{ hostName }}"
-          "tag:serverType": "nginx"
-      register: result
-    - name: Print server instances
-      debug:
-        var: result.instances
-    - name: Add instance to host group
-      add_host:
-        hostname: "{{ item.private_ip_address }}"
-        groupname: instances
-      with_items:
-        - "{{ result.instances }}"
+    - include: ec2-instance-discover.yml
     - name: set local variables
       set_fact:
         baseDomain: "{{baseDomain}}"
@@ -98,4 +84,4 @@
     Domain: "{{hostvars['localhost']['baseDomain']}}"
     Aliases: "{{hostvars['localhost']['siteAliases']}}"
   tasks:
-    - include: setup-nginx-site.yml
+    - include: nginxsite-setup.yml

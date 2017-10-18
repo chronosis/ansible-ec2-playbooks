@@ -1,0 +1,67 @@
+---
+- name: update installed packages
+  become: true
+  yum:
+    name: "*"
+    state: latest
+- name: remove old yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: absent
+  with_items:
+    - { package: 'logstash', notes: 'Logstash' }
+- name: install yum packages
+  become: true
+  yum:
+    name: "{{ item.package }}"
+    state: latest
+  with_items:
+    - { package: 'java-1.8.0-openjdk', notes: 'OpenJDK' }
+    - { package: 'https://artifacts.elastic.co/downloads/logstash/logstash-5.6.2.rpm', notes: 'Logstash' }
+- include: awscli-setup.yml
+- name: set sysctl for memory overcommit
+  become: true
+  lineinfile:
+    dest: /etc/sysctl.conf
+    regexp: ^vm.overcommit_memory
+    line: vm.overcommit_memory = 1
+    state: present
+- name: configure logstash output folders
+  become: true
+  file:
+    path: /var/lib/logstash
+    owner: logstash
+    group: logstash
+    recurse: true
+- name: configure log folders
+  become: true
+  file:
+    path: /var/log
+    mode: a+r
+    recurse: true
+- name: enable logstash
+  become: true
+  service:
+    name: logstash
+    runlevel: 345
+    enabled: true
+- name: start logstash
+  become: true
+  service:
+    name: logstash
+    state: started
+- name: setup logstash configuration
+  become: true
+  copy:
+    src: "{{ item.file }}"
+    dest: "/etc/logstash/conf.d/{{ item.file }}"
+    mode: 0644
+  with_items:
+    - { file: "./elk/10-syslog.conf", notes: 'SysConf configuration' }
+    - { file: "./elk/20-udp-json.conf", notes: 'UDP JSON configuration' }
+- name: restart logstash
+  become: true
+  service:
+    name: logstash
+    state: restarted

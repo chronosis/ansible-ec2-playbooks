@@ -1,0 +1,13 @@
+---
+- name: Create aws ec2 server
+  hosts: localhost
+  become: false
+  gather_facts: false
+  vars_prompt:
+    - name: "instanceName"
+      prompt: "Enter the name for the instance"
+      private: no
+  vars:
+    ec2size: t2.micro
+  tasks:
+    - include: ec2-instance-create.yml

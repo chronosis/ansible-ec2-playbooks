@@ -27,6 +27,15 @@
       default: ""
       private: no
   tasks:
+    - include: ec2-instance-discover.yml
+    - name: Add serverType tag to the new instance(s)
+      ec2_tag:
+        region: "{{ item.region }}"
+        resource: "{{ item.id }}"
+        tags:
+          serverType: "elasticsearch"
+      with_items:
+        - "{{ result.instances }}"    
     - name: set local variables
       set_fact:
         baseDomain: "{{baseDomain}}"
@@ -40,20 +49,6 @@
       when:
         - certPrvKey|default("") != ""
         - certPemKey|default("") != ""
-    - name: Gather facts
-      ec2_remote_facts:
-        filters:
-          "tag:Name": "{{ hostName }}"
-      register: result
-    - name: Print server instances
-      debug:
-        var: result.instances
-    - name: Add instance to host group
-      add_host:
-        hostname: "{{ item.private_ip_address }}"
-        groupname: instances
-      with_items:
-        - "{{ result.instances }}"
     - name: set value for caBundleIncluded if true
       set_fact:
         caBundleIncluded: true
@@ -73,6 +68,6 @@
     Domain: "{{hostvars['localhost']['baseDomain']}}"
     Aliases: "{{hostvars['localhost']['siteAliases']}}"
   tasks:
-    - include: setup-nginx.yml
-    - include: setup-elk.yml
-    - include: setup-nginx-kibana.yml
+    - include: nginx-setup.yml
+    - include: esk-setup.yml
+    - include: esk-nginx-setup.yml

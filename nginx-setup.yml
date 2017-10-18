@@ -20,7 +20,7 @@
   with_items:
     - { package: 'nginx', notes: 'NGINX' }
     - { package: 'nginx-all-modules', notes: 'NGINX Modules' }
-- include: setup-awscli.yml
+- include: awscli-setup.yml
 - name: create web root folder
   become: true
   file:

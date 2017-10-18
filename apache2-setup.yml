@@ -14,7 +14,7 @@
     - { package: 'httpd24-manual', notes: 'Apache2 Manual' }
     - { package: 'httpd24-tools', notes: 'Apache2 Tools' }
     - { package: 'mod24_ssl', notes: 'Apache2 SSL/TLS Module' }
-- include: setup-awscli.yml
+- include: awscli-setup.yml
 - name: enable mod_rewrite
   become: true
   apache2_module:

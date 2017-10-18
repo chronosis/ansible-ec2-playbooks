@@ -8,14 +8,7 @@
       prompt: "Enter the name of the instance"
       private: no
   tasks:
-    - name: Gather facts
-      ec2_remote_facts:
-        filters:
-          "tag:Name": "{{ hostName }}"
-      register: result
-    - name: Get server list
-      set_fact:
-        instances: "{{ result.instances }}"
+    - include: ec2-instance-discover.yml
     - name: Start server instance
       ec2:
         region: "{{ item.region }}"

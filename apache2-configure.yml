@@ -1,0 +1,22 @@
+---
+- name: Discover instances(s)
+  become: false
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
+      private: no
+  tasks:
+    - include: ec2-instance-discover.yml
+    - name: deploy SSH key for doc deploy
+      command: "ssh-copy-id -i ssh/doc_deploy_rsa.pub {{ item.private_dns_name }}"
+      with_items:
+        - "{{ result.instances }}"
+
+- name: Setup apache2
+  hosts: instances
+  become: false
+  gather_facts: false
+  tasks:
+    - include: apache2-setup.yml

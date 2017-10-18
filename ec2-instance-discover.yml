@@ -1,0 +1,15 @@
+---
+- name: Discover instances(s)
+  ec2_remote_facts:
+    filters:
+      "tag:Name": "{{ hostName }}"
+  register: result
+- name: Print server instances
+  debug:
+    var: result.instances
+- name: Add instance to host group
+  add_host:
+    hostname: "{{ item.private_ip_address }}"
+    groupname: instances
+  with_items:
+    - "{{ result.instances }}"

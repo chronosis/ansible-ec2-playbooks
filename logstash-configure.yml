@@ -1,0 +1,26 @@
+---
+- name: Discover instances(s)
+  become: false
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
+      private: no
+  tasks:
+    - include: ec2-instance-discover.yml
+    - name: Add serverType tag to the new instance(s)
+      ec2_tag:
+        region: "{{ item.region }}"
+        resource: "{{ item.id }}"
+        tags:
+          serverType: "logstash"
+      with_items:
+        - "{{ result.instances }}"
+
+- name: Setup Logstash
+  hosts: instances
+  become: false
+  gather_facts: false
+  tasks:
+    - include: logstash-setup.yml

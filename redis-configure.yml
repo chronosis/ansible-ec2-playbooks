@@ -8,27 +8,14 @@
       prompt: "Enter the name of the instance"
       private: no
   tasks:
-    - name: Gather facts
-      ec2_remote_facts:
-        filters:
-          "tag:Name": "{{ hostName }}"
-      register: result
-    - name: Print server instances
-      debug:
-        var: result.instances
-    - name: Add instance to host group
-      add_host:
-        hostname: "{{ item.private_ip_address }}"
-        groupname: instances
-      with_items:
-        - "{{ result.instances }}"
+    - include: ec2-instance-discover.yml
 
 - name: Setup redis
   hosts: instances
   become: false
   gather_facts: false
   tasks:
-    - include: setup-redis.yml
+    - include: redis-setup.yml
 
 - name: Check Redis Status
   hosts: localhost

@@ -20,20 +20,7 @@
       prompt: "Enter the grafana password"
       private: no
   tasks:
-    - name: Gather facts
-      ec2_remote_facts:
-        filters:
-          "tag:Name": "{{ hostName }}"
-      register: result
-    - name: Print server instances
-      debug:
-        var: result.instances
-    - name: Add instance to host group
-      add_host:
-        hostname: "{{ item.private_ip_address }}"
-        groupname: instances
-      with_items:
-        - "{{ result.instances }}"
+    - include: ec2-instance-discover.yml
 
 - name: Setup monitor
   hosts: instances
@@ -45,4 +32,4 @@
     TelegrafUserPass: "{{hostvars['localhost']['telegraf']}}"
     GrafanaUserPass: "{{hostvars['localhost']['grafana']}}"
   tasks:
-    - include: setup-monitor.yml
+    - include: monitor-setup.yml

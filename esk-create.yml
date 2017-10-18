@@ -26,7 +26,18 @@
       prompt: "Enter the local (.ca-bundle) filename for the SSL Cert (if it has one)"
       default: ""
       private: no
+  vars:
+    ec2size: t2.small
   tasks:
+    - include: ec2-instance-create.yml
+    - name: Add serverType tag to the new instance(s)
+      ec2_tag:
+        region: "{{ item.region }}"
+        resource: "{{ item.id }}"
+        tags:
+          serverType: "elasticsearch"
+      with_items:
+        - "{{ result.instances }}"
     - name: set local variables
       set_fact:
         baseDomain: "{{baseDomain}}"
@@ -40,53 +51,6 @@
       when:
         - certPrvKey|default("") != ""
         - certPemKey|default("") != ""
-    - name: Create ec2 instance
-      ec2:
-        key_name: default-website
-        profile: production
-        group:
-          - website-api-sg
-          - build-travisci-sg
-          - user-jreardon-sg
-        instance_type: t2.small
-        image: ami-258d445f
-        vpc_subnet_id: subnet-533c2215
-        region: us-east-1
-        assign_public_ip: yes
-        instance_profile_name: codedeploy-role
-        instance_tags:
-          Name: "{{ instanceName }}"
-          serverType: "elasticsearch"
-        wait: true
-        count: 1
-      register: result
-    - name: Add Name tag to the new instance(s)
-      ec2_tag:
-        region: "{{ item.region }}"
-        resource: "{{ item.id }}"
-        tags:
-          Name: "{{ instanceName }}"
-          serverType: "elasticsearch"
-      with_items:
-        - "{{ result.instances }}"
-    - name: Debug output of results
-      debug:
-        var: result.instances
-    - name: Add instance to host group
-      add_host:
-        hostname: "{{ item.private_ip }}"
-        groupname: instances
-      with_items:
-        - "{{ result.instances }}"
-    - name: Wait for SSH
-      wait_for:
-        host: "{{ item.private_dns_name }}"
-        port: 22
-        delay: 60
-        timeout: 320
-        state: started
-      with_items:
-        - "{{ result.instances }}"
     - name: set value for caBundleIncluded if true
       set_fact:
         caBundleIncluded: true
@@ -106,6 +70,6 @@
     Domain: "{{hostvars['localhost']['baseDomain']}}"
     Aliases: "{{hostvars['localhost']['siteAliases']}}"
   tasks:
-    - include: setup-nginx.yml
-    - include: setup-elk.yml
-    - include: setup-nginx-kibana.yml
+    - include: nginx-setup.yml
+    - include: esk-setup.yml
+    - include: esk-nginx-setup.yml

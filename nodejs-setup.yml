@@ -25,7 +25,7 @@
 #    name: pip
 #    state: latest
 #  command: pip install --ignore-installed --upgrade pip
-- include: setup-awscli.yml
+- include: awscli-setup.yml
 - name: download codedeploy-agent
   become: true
   get_url:

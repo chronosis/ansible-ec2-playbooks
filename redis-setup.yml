@@ -13,7 +13,7 @@
     - { package: 'gcc', notes: 'GNU C Compiler' }
     - { package: 'tcl', notes: 'Tool Command Language' }
     - { package: 'make', notes: 'MAKE tools' }
-- include: setup-awscli.yml
+- include: awscli-setup.yml
 - name: download and extract redis archive
   become: true
   unarchive:

@@ -22,9 +22,8 @@
   with_items:
     - { package: 'java-1.8.0-openjdk', notes: 'OpenJDK' }
     - { package: 'https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.2.rpm', notes: 'ElasticSearch' }
-    - { package: 'https://artifacts.elastic.co/downloads/logstash/logstash-5.6.2.rpm', notes: 'Logstash' }
     - { package: 'https://artifacts.elastic.co/downloads/kibana/kibana-5.6.2-x86_64.rpm', notes: 'Kibana' }
-- include: setup-awscli.yml
+- include: awscli-setup.yml
 - name: set sysctl for memory overcommit
   become: true
   lineinfile:
@@ -61,28 +60,6 @@
     delay: 1
     timeout: 150
     state: started
-- name: enable logstash
-  become: true
-  service:
-    name: logstash
-    runlevel: 345
-    enabled: true
-- name: start logstash
-  become: true
-  service:
-    name: logstash
-    state: started
-- name: setup logstash configuration
-  become: true
-  copy:
-    src: "./elk/10-syslog.conf"
-    dest: "/etc/logstash/conf.d/10-syslog.conf"
-    mode: 0644
-- name: restart logstash
-  become: true
-  service:
-    name: logstash
-    state: restarted
 - name: enable kibana
   become: true
   service:

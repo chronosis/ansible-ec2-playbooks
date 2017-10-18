@@ -8,24 +8,18 @@
       prompt: "Enter the name of the instance"
       private: no
   tasks:
-    - name: Gather facts
-      ec2_remote_facts:
-        filters:
-          "tag:Name": "{{ hostName }}"
-          "tag:serverType": "nginx"
-      register: result
-    - name: Print server instances
-      debug:
-        var: result.instances
-    - name: Add instance to host group
-      add_host:
-        hostname: "{{ item.private_ip_address }}"
-        groupname: instances
+    - include: ec2-instance-discover.yml
+    - name: Add nginx tag to the new instance(s)
+      ec2_tag:
+        region: "{{ item.region }}"
+        resource: "{{ item.id }}"
+        tags:
+          serverType: "nginx"
       with_items:
         - "{{ result.instances }}"
     - name: Copy SSH Key to server
       copy:
-        src: site_deploy_rsa.pub
+        src: ssh/site_deploy_rsa.pub
         dest: ~/.ssh/site_deploy_rsa.pub
         mode: 0600
     - name: Deploy SSH key for site deploy
@@ -43,4 +37,4 @@
   become: false
   gather_facts: false
   tasks:
-    - include: setup-nginx.yml
+    - include: nginx-setup.yml
