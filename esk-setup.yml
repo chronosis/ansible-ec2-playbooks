@@ -37,7 +37,7 @@
     name: elasticsearch
     runlevel: 345
     enabled: true
-- name: set elasticsearch heap size
+- name: set elasticsearch heap size 1/2
   become: true
   lineinfile:
     dest: /etc/init.d/elasticsearch
@@ -47,6 +47,23 @@
     state: present
   with_items:
     - { regexp: '^ES_JAVA_OPTS', line: 'ES_JAVA_OPTS="-Xms1g -Xmx1g"', after: '^ES_HOME=', notes: 'Java Options' }
+- name: set elasticsearch heap size 2/2
+  become: true
+  lineinfile:
+    dest: /etc/elasticsearch/jvm.options
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+    - { regexp: '^-Xms', line: '-Xms1g', notes: 'Initial Heap Size' }
+    - { regexp: '^-Xmx', line: '-Xmx1g', notes: 'Maximum Heap Size' }
+- name: set elasticsearch network host
+  become: true
+  lineinfile:
+    dest: /etc/elasticsearch/elasticsearch.yml
+    regexp: "^#?network.host:"
+    line: "network.host: 0.0.0.0"
+    state: present
 - name: start elasticsearch
   become: true
   service:
