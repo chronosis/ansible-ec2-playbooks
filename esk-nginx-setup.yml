@@ -2,6 +2,7 @@
 - name: set variables
   set_fact:
     nginx_conf: "/etc/nginx/conf.d/{{Domain}}.conf"
+    nginx_passwd: "/etc/nginx/conf.d/{{Domain}}_htpasswd"
     root_folder: "/var/www/{{Domain}}/html"
     log_folder: "/var/log/nginx/{{Domain}}"
     sslIncluded: "{{hasSSL}}"
@@ -11,6 +12,13 @@
   copy:
     src: nginx/kibana-configuration.conf
     dest: "{{nginx_conf}}"
+    force: true
+    mode: 0755
+- name: copy the htpasswd
+  become: true
+  copy:
+    src: nginx/_htpasswd
+    dest: "{{nginx_passwd}}"
     force: true
     mode: 0755
 - name: create root folders for baseDomain
