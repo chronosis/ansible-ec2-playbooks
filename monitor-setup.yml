@@ -109,7 +109,7 @@
   service:
     name: grafana-server
     state: started
-- name: check that telegraf is running
+- name: check that grafana is running
   become: true
   wait_for:
     host: localhost
