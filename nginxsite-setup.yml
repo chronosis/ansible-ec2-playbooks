@@ -12,6 +12,16 @@
     dest: "{{nginx_conf}}"
     force: true
     mode: 0755
+- name: copy ssl certs
+  become: true
+  copy:
+    src: "{{ item.file }}"
+    dest: "{{ item.file }}"
+    force: true
+  with_items:
+    - { file: "/etc/ssl/{{Domain}}.key", notes: 'public key' }
+    - { file: "/etc/ssl/{{Domain}}.pem", notes: 'certificate' }
+  when: sslIncluded
 - name: create root folders for baseDomain
   become: true
   file:
