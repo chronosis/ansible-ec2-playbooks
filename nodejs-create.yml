@@ -11,11 +11,11 @@
     ec2size: t2.micro
   tasks:
     - include: ec2-instance-create.yml
-  
+
 - name: Setup nodejs
   hosts: instances
   become: false
   gather_facts: false
   tasks:
-    - include: setup-nodejs.yml
-    - include: setup-iptables.yml
+    - include: nodejs-setup.yml
+    - include: iptables-setup.yml
