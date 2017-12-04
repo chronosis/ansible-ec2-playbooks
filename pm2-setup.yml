@@ -13,4 +13,4 @@
     - { command: 'pm2 set pm2-logrotate:max_size 10M', notes: 'Set max log file size'}
     - { command: 'pm2 set pm2-logrotate:retain 10', notes: 'Set max number of logs files'}
     - { command: 'pm2 set pm2-logrotate:compress true', notes: 'Set compression for rotated logs'}
-    - { command: 'pm2 set pm2-logrotate:rotateInterval '0 0 * * *'', notes: 'Set interval for nightly rotation'}
+    - { command: 'pm2 set pm2-logrotate:rotateInterval \'0 0 * * *\'', notes: 'Set interval for nightly rotation'}
