@@ -68,10 +68,8 @@
     global: yes
     state: latest
   with_items:
-    - { package: 'pm2', notes: 'Process Manager 2 (PM2)' }
     - { package: 'gulp', notes: 'Gulp' }
     - { package: 'gulp-cli', notes: 'Gulp CLI' }
     - { package: 'mocha', notes: 'Mocha' }
     - { package: 'nyc', notes: 'NYC-Instanbul' }
-- name: daemonize pm2
-  command: pm2 update
+- include: pm2-setup.yml
