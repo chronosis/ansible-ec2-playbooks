@@ -48,7 +48,7 @@
 - name: install NVM
   command: ~/install-nvm.sh
 - name: install nodejs
-  shell: /bin/bash -c "source ~/.nvm/nvm.sh && nvm install 8.2.1"
+  shell: /bin/bash -c "source ~/.nvm/nvm.sh && nvm install 8.4.0"
 - name: install Ruby packages (i.e. TravisCI CLI)
   become: true
   gem:

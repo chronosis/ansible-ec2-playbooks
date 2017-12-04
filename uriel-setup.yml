@@ -23,6 +23,14 @@
     state: latest
 - name: start pm2 daemon
   command: pm2 update
+- name: setup pm2 logrotate
+  command: "{{item.command}}"
+  with_items:
+    - { command: 'pm2 install pm2-logrotate', notes: 'Install pm2-logrotate'}
+    - { command: 'pm2 set pm2-logrotate:max_size 10M', notes: 'Set max log file size'}
+    - { command: 'pm2 set pm2-logrotate:retain 10', notes: 'Set max number of logs files'}
+    - { command: 'pm2 set pm2-logrotate:compress true', notes: 'Set compression for rotated logs'}
+    - { command: 'pm2 set pm2-logrotate:rotateInterval '0 0 * * *'', notes: 'Set interval for nightly rotation'}
 - name: remove Uriel from pm2 if it exists
   command: pm2 delete "Uriel" -s
   ignore_errors: true
