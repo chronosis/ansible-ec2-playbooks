@@ -1,5 +1,6 @@
 ---
 - set_fact:
+    use_public: true
     instance_size: t2.micro
     server_count: 1
     aws_keyname: default-website

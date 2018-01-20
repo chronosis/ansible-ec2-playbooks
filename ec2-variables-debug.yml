@@ -6,6 +6,8 @@
   tasks:
     - include: ec2-variables.yml
     - debug:
+        var: use_public
+    - debug:
         var: instance_size
     - debug:
         var: server_count

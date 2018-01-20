@@ -40,10 +40,11 @@
     var: result.instances
 - name: Add instance to host group
   add_host:
-    hostname: "{{ item.private_ip }}"
+    hostname: "{{ item.private_ip_address}}"
     groupname: instances
   with_items:
     - "{{ result.instances }}"
+  when: use_public != true
 - name: Wait for SSH
   wait_for:
     host: "{{ item.private_dns_name }}"
@@ -53,3 +54,21 @@
     state: started
   with_items:
     - "{{ result.instances }}"
+  when: use_public != true
+- name: Add instance to host group
+  add_host:
+    hostname: "{{ item.public_dns_name }}"
+    groupname: instances
+  with_items:
+    - "{{ result.instances }}"
+  when: use_public != true
+- name: Wait for SSH
+  wait_for:
+    host: "{{ item.public_dns_name }}"
+    port: 22
+    delay: 60
+    timeout: 320
+    state: started
+  with_items:
+    - "{{ result.instances }}"
+  when: use_public != true

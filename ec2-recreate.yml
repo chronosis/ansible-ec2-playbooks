@@ -17,13 +17,10 @@
       ec2_instance_facts:
         filters:
           "tag:Name": "{{ hostName }}"
-      register: instance
+      register: facts
     - name: Get server list
       set_fact:
         instances: "{{ result.instances }}"
-      ec2_instance_facts:
-        instance_ids: "{{ item.id }}"
-      register: facts
     - name: Retag instances
       ec2_tag:
         region: "{{ item.region }}"
@@ -67,12 +64,20 @@
     - name: Debug output of results
       debug:
         var: result.instances
-    - name: Add instance to host group
+    - name: Add instance to host group (private)
       add_host:
         hostname: "{{ item.private_ip }}"
         groupname: instances
       with_items:
         - "{{ result.instances }}"
+      when: use_public != true
+    - name: Add instance to host group (public)
+      add_host:
+        hostname: "{{ item.public_ip }}"
+        groupname: instances
+      with_items:
+        - "{{ result.instances }}"
+      when: use_public == true
     - name: Wait for SSH
       wait_for:
         host: "{{ item.private_dns_name }}"
@@ -82,3 +87,14 @@
         state: started
       with_items:
         - "{{ result.instances }}"
+      when: use_public != true
+    - name: Wait for SSH
+      wait_for:
+        host: "{{ item.public_dns_name }}"
+        port: 22
+        delay: 60
+        timeout: 320
+        state: started
+      with_items:
+        - "{{ result.instances }}"
+      when: use_public == true

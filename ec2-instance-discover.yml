@@ -15,3 +15,11 @@
     groupname: instances
   with_items:
     - "{{ result.instances }}"
+  when: use_public != true
+- name: Add instance to host group
+  add_host:
+    hostname: "{{ item.public_dns_address }}"
+    groupname: instances
+  with_items:
+    - "{{ result.instances }}"
+  when: use_public == true
