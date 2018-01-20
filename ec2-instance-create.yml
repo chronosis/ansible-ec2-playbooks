@@ -1,32 +1,17 @@
 ---
-- name: set default value for instance_size
-  set_fact:
-    instance_size: t2.micro
-- set_fact:
-    instance_size: "{{ ec2size }}"
-  when:
-    - ec2size|default("") != ""
-- name: set default value for server_count
-  set_fact:
-    server_count: 1
-- set_fact:
-    server_count: "{{ ec2count }}"
-  when:
-    - ec2count|default(1) != 1
+- include: ec2-variables.yml
 - name: Create ec2 instance
   ec2:
-    key_name: default-website
-    profile: production
+    key_name: "{{ aws_keyname }}"
+    profile: "{{ aws_profile }}"
     group:
-      - website-api-sg
-      - build-travisci-sg
-      - user-jreardon-sg
+      - "{{ aws_ec2_group }}"
     instance_type: "{{ instance_size }}"
-    image: ami-e0b67f9a
-    vpc_subnet_id: subnet-533c2215
-    region: us-east-1
+    image: "{{ aws_image }}"
+    vpc_subnet_id: "{{ aws_vpc_subnet_id }}"
+    region: "{{ aws_region }}"
     assign_public_ip: yes
-    instance_profile_name: codedeploy-role
+    instance_profile_name: "{{ aws_instance_profile_name }}"
     instance_tags:
       Name: "{{ instanceName }}"
     wait: true

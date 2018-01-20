@@ -1,0 +1,22 @@
+---
+- set_fact:
+    instance_size: t2.micro
+    server_count: 1
+    aws_keyname: default-website
+    aws_profile: production
+    aws_image: ami-e0b67f9a
+    aws_vpc_subnet_id: subnet-533c2215
+    aws_instance_profile_name: codedeploy-role
+    aws_region: us-east-1
+    aws_ec2_group:
+      - website-api-sg
+      - build-travisci-sg
+      - user-jreardon-sg
+- set_fact:
+    instance_size: "{{ ec2size }}"
+  when:
+    - ec2size|default("") != ""
+- set_fact:
+    server_count: "{{ ec2count }}"
+  when:
+    - ec2count|default(1) != 1

@@ -1,6 +1,8 @@
 ---
+- include: ec2-variables.yml
 - name: Discover instances(s)
   ec2_remote_facts:
+    region: "{{ aws_region }}"
     filters:
       "tag:Name": "{{ hostName }}"
   register: result

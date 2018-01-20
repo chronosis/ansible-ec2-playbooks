@@ -1,0 +1,25 @@
+---
+- name: Print ec2 setup variable information
+  become: false
+  gather_facts: false
+  hosts: localhost
+  tasks:
+    - include: ec2-variables.yml
+    - debug:
+        var: instance_size
+    - debug:
+        var: server_count
+    - debug:
+        var: aws_keyname
+    - debug:
+        var: aws_profile
+    - debug:
+        var: aws_image
+    - debug:
+        var: aws_vpc_subnet_id
+    - debug:
+        var: aws_instance_profile_name
+    - debug:
+        var: aws_region
+    - debug:
+        var: aws_ec2_group

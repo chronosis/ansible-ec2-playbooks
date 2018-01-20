@@ -8,14 +8,22 @@
       prompt: "Enter the name of the instance"
       private: no
   tasks:
+    - include: ec2-variables.yml
     - name: Gather facts
       ec2_remote_facts:
         filters:
           "tag:Name": "{{ hostName }}"
       register: result
+      ec2_instance_facts:
+        filters:
+          "tag:Name": "{{ hostName }}"
+      register: instance
     - name: Get server list
       set_fact:
         instances: "{{ result.instances }}"
+      ec2_instance_facts:
+        instance_ids: "{{ item.id }}"
+      register: facts
     - name: Retag instances
       ec2_tag:
         region: "{{ item.region }}"
@@ -36,15 +44,13 @@
         key_name: default-website
         profile: production
         group:
-          - website-api-sg
-          - build-travisci-sg
-          - user-jreardon-sg
-        instance_type: t2.micro
-        image: ami-e0b67f9a
-        vpc_subnet_id: subnet-533c2215
-        region: us-east-1
+          - "{{ aws_ec2_group }}"
+        instance_type: "{{ instance_size }}"
+        image: "{{ item.image_id }}"
+        vpc_subnet_id: "{{ aws_vpc_subnet_id }}"
+        region: "{{ item.region }}"
         assign_public_ip: yes
-        instance_profile_name: codedeploy-role
+        instance_profile_name: "{{ item.instance_profile }}"
         instance_tags:
           Name: "{{ hostName }}"
         wait: true

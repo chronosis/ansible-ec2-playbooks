@@ -8,8 +8,10 @@
       prompt: "Enter the name of the instance"
       private: no
   tasks:
+    - include: ec2-variables.yml
     - name: Gather facts
       ec2_remote_facts:
+        region: "{{ aws_region }}"
         filters:
           "tag:Name": "{{ hostName }}"
       register: result
