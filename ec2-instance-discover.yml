@@ -18,7 +18,7 @@
   when: use_public != true
 - name: Add instance to host group
   add_host:
-    hostname: "{{ item.public_dns_address }}"
+    hostname: "{{ item.public_dns_name }}"
     groupname: instances
   with_items:
     - "{{ result.instances }}"
