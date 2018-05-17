@@ -41,6 +41,9 @@
       when:
         - certPrvKey|default("") != ""
         - certPemKey|default("") != ""
+    - name: set default value for caBundleIncluded
+      set_fact:
+        caBundleIncluded: false
     - name: set value for caBundleIncluded if true
       set_fact:
         caBundleIncluded: true
