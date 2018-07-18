@@ -4,8 +4,7 @@
   ec2:
     key_name: "{{ aws_keyname }}"
     profile: "{{ aws_profile }}"
-    group:
-      - "{{ aws_ec2_group }}"
+    group: "{{ aws_ec2_group }}"
     instance_type: "{{ instance_size }}"
     image: "{{ aws_image }}"
     vpc_subnet_id: "{{ aws_vpc_subnet_id }}"

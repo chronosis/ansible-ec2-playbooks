@@ -1,0 +1,17 @@
+---
+- name: Discover instances(s)
+  become: false
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: "hostName"
+      prompt: "Enter the name of the instance"
+      private: no
+  tasks:
+    - include: ec2-instance-discover.yml
+- name: Install/Update Git
+  hosts: instances
+  become: true
+  yum:
+    name: "git"
+    state: latest
