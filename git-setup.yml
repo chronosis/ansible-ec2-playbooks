@@ -1,0 +1,6 @@
+---
+- name: Use Yum to update git
+  become: true
+  yum:
+    name: "git"
+    state: latest

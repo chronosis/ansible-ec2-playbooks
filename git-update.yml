@@ -9,9 +9,10 @@
       private: no
   tasks:
     - include: ec2-instance-discover.yml
+
 - name: Install/Update Git
   hosts: instances
-  become: true
-  yum:
-    name: "git"
-    state: latest
+  become: false
+  gather_facts: false
+  tasks:
+    - include: git-setup.yml
