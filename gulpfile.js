@@ -17,5 +17,5 @@ gulp.task('rsync', () => {
 });
 
 gulp.task('watch', () => {
-  gulp.watch('./*.yml', ['rsync']);
+  gulp.watch('./*.yml', gulp.series('rsync'));
 });
