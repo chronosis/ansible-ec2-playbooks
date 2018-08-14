@@ -3,8 +3,8 @@ const
   , rsync         = require('gulp-rsync')
 ;
 
-gulp.task('default', () => {
-
+gulp.task('default', (done) => {
+  done();
 });
 
 gulp.task('rsync', () => {
